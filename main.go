@@ -13,6 +13,7 @@ func main() {
 	app := fiber.New()
 	app.Use(cors.New())
 	app.Get("/api/products", handlers.GetProducts)
+	app.Get("/api/products/:product_id", handlers.GetProduct)
 
 	if err := app.Listen(":8080"); err != nil {
 		log.Fatal(err)
