@@ -2,18 +2,42 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/cladamos/clamarket-be/handlers"
+	"github.com/cladamos/clamarket-be/repo"
+	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
+	_ "github.com/lib/pq"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file: ", err)
+	}
+
+	dsn := os.Getenv("DSN_STR")
+
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN: dsn,
+	}), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+
+	if err != nil {
+		log.Fatal("Failed to connect to database: ", err)
+	}
+
+	productRepo := repo.NewProductRepository(db)
+
 	app := fiber.New()
 	app.Use(cors.New())
-	app.Get("/api/products", handlers.GetProducts)
-	app.Get("/api/products/:product_id", handlers.GetProduct)
+	app.Get("/api/products", handlers.GetProducts(productRepo))
+	app.Get("/api/products/:id", handlers.GetProductByID(productRepo))
 
 	if err := app.Listen(":8080"); err != nil {
 		log.Fatal(err)
