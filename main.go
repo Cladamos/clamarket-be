@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/cladamos/clamarket-be/handlers"
+	"github.com/cladamos/clamarket-be/models"
 	"github.com/cladamos/clamarket-be/repo"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -32,12 +33,16 @@ func main() {
 		log.Fatal("Failed to connect to database: ", err)
 	}
 
+	db.AutoMigrate(&models.Product{}, &models.User{})
+
 	productRepo := repo.NewProductRepository(db)
+	userRepo := repo.NewUserRepository(db)
 
 	app := fiber.New()
 	app.Use(cors.New())
 	app.Get("/api/products", handlers.GetProducts(productRepo))
 	app.Get("/api/products/:id", handlers.GetProductByID(productRepo))
+	app.Post("/api/users/register", handlers.Register(userRepo))
 
 	if err := app.Listen(":8080"); err != nil {
 		log.Fatal(err)
