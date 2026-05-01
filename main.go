@@ -38,7 +38,10 @@ func main() {
 	productRepo := repo.NewProductRepository(db)
 	userRepo := repo.NewUserRepository(db)
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: handlers.ErrorHandler,
+	})
+
 	app.Use(cors.New())
 	app.Get("/api/products", handlers.GetProducts(productRepo))
 	app.Get("/api/products/:id", handlers.GetProductByID(productRepo))

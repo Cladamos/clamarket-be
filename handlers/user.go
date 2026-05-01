@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"strings"
 
 	"github.com/cladamos/clamarket-be/models"
@@ -16,30 +15,27 @@ func Register(r *repo.UserRepository) fiber.Handler {
 
 		u := new(models.RegisterRequest)
 		if err := c.Bind().Body(u); err != nil {
-			log.Println("Bind body failed: ", err)
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Something went wrong"})
+			return NewBadRequestError("invalid request body")
 		}
 
 		u.Name = strings.TrimSpace(u.Name)
 		u.Email = strings.TrimSpace(u.Email)
 
 		if validationErr := ValidateStruct(u); len(validationErr) > 0 {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": validationErr})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "validation error", "details": validationErr})
 		}
 
 		isExist, err := r.IsExist(u.Email)
 		if err != nil {
-			log.Println("IsExist check failed: ", err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Something went wrong"})
+			return NewInternalError("checking user existence", err)
 		}
 		if isExist {
-			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "User already exist"})
+			return NewConflictError("user already exists")
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 		if err != nil {
-			log.Println("Hash password failed: ", err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Something went wrong"})
+			return NewInternalError("hashing password", err)
 		}
 		if err = r.Create(&models.User{
 			ID:       uuid.NewString(),
@@ -47,10 +43,9 @@ func Register(r *repo.UserRepository) fiber.Handler {
 			Email:    u.Email,
 			Password: hashedPassword,
 		}); err != nil {
-			log.Println("Create user failed: ", err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Something went wrong"})
+			return NewInternalError("creating user", err)
 		}
 
-		return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "User created successfully"})
+		return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "user created successfully"})
 	}
 }

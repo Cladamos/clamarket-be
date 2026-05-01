@@ -10,7 +10,7 @@ func GetProducts(r *repo.ProductRepository) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		products, err := r.GetAll()
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch products"})
+			return NewInternalError("fetching products", err)
 		}
 		return c.JSON(products)
 	}
@@ -22,9 +22,9 @@ func GetProductByID(r *repo.ProductRepository) fiber.Handler {
 		product, err := r.GetByID(id)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Product not found"})
+				return NewNotFoundError("Product not found")
 			}
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch product"})
+			return NewInternalError("fetching product", err)
 		}
 		return c.JSON(product)
 	}
