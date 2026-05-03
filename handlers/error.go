@@ -31,11 +31,15 @@ func NewNotFoundError(message string) *AppError {
 	return &AppError{StatusCode: fiber.StatusNotFound, Message: message}
 }
 
+func NewUnauthorizedError(message string) *AppError {
+	return &AppError{StatusCode: fiber.StatusUnauthorized, Message: message}
+}
+
 func NewInternalError(logMessage string, err error) *AppError {
 	log.Printf("ERROR: %s: %v", logMessage, err)
 	return &AppError{
 		StatusCode: fiber.StatusInternalServerError,
-		Message:    "Something went wrong",
+		Message:    "something went wrong",
 		Internal:   err,
 	}
 }
@@ -55,6 +59,6 @@ func ErrorHandler(c fiber.Ctx, err error) error {
 
 	log.Printf("ERROR: unexpected: %v", err)
 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Something went wrong",
+		"error": "something went wrong",
 	})
 }

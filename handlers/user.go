@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 func Register(r *repo.UserRepository) fiber.Handler {
@@ -47,5 +48,33 @@ func Register(r *repo.UserRepository) fiber.Handler {
 		}
 
 		return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "user created successfully"})
+	}
+}
+
+func Login(r *repo.UserRepository) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		u := new(models.LoginRequest)
+		if err := c.Bind().Body(u); err != nil {
+			return NewBadRequestError("invalid request body")
+		}
+
+		u.Email = strings.TrimSpace(u.Email)
+
+		if validationErr := ValidateStruct(u); len(validationErr) > 0 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "validation error", "details": validationErr})
+		}
+
+		user, err := r.GetByEmail(u.Email)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return NewUnauthorizedError("invalid credentials")
+			}
+			return NewInternalError("fetching user", err)
+		}
+
+		if err := bcrypt.CompareHashAndPassword(user.Password, []byte(u.Password)); err != nil {
+			return NewUnauthorizedError("invalid credentials")
+		}
+		return c.JSON(fiber.Map{"message": "login success"})
 	}
 }

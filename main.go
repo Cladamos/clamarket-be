@@ -46,6 +46,7 @@ func main() {
 	app.Get("/api/products", handlers.GetProducts(productRepo))
 	app.Get("/api/products/:id", handlers.GetProductByID(productRepo))
 	app.Post("/api/users/register", handlers.Register(userRepo))
+	app.Post("/api/users/login", handlers.Login(userRepo))
 
 	if err := app.Listen(":8080"); err != nil {
 		log.Fatal(err)

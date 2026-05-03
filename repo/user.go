@@ -30,3 +30,12 @@ func (r *UserRepository) IsExist(email string) (bool, error) {
 	}
 	return true, nil
 }
+
+func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
+	var user models.User
+	err := r.db.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
