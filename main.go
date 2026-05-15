@@ -45,8 +45,10 @@ func main() {
 	app.Use(cors.New())
 	app.Get("/api/products", handlers.GetProducts(productRepo))
 	app.Get("/api/products/:id", handlers.GetProductByID(productRepo))
+
 	app.Post("/api/users/register", handlers.Register(userRepo))
 	app.Post("/api/users/login", handlers.Login(userRepo))
+	app.Get("/api/users/me", handlers.GetMe(userRepo))
 
 	if err := app.Listen(":8080"); err != nil {
 		log.Fatal(err)
